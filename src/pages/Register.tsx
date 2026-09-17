@@ -43,7 +43,7 @@ export default function Register() {
         email,
         password,
           options: {
-                 emailRedirectTo: "http://localhost:5173/login",
+                 emailRedirectTo: `${import.meta.env.VITE_APP_URL}/login`,
                    data: {
                             full_name: userName,
                           },
