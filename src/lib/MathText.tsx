@@ -13,7 +13,7 @@ export default function MathText({ text }: MathTextProps) {
 
     containerRef.current.innerHTML = "";
 
-    const parts = text.split(/(\$\$.*?\$\$|\$.*?\$)/g);
+    const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
 
     parts.forEach((part) => {
       if (part.startsWith("$$") && part.endsWith("$$")) {
@@ -45,5 +45,11 @@ export default function MathText({ text }: MathTextProps) {
     });
   }, [text]);
 
-  return <span ref={containerRef} />;
+  // return <span ref={containerRef} />;
+  return (
+  <span
+    ref={containerRef}
+    style={{ whiteSpace: "pre-line", textAlign: "left" }}
+  />
+);
 }
