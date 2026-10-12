@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import Battle from './pages/Battle';
 import Practice from './pages/Practice';
 import Leaderboard from './pages/Leaderboard';
+import Feedback from './pages/Feedback';
 import AppLayout from './components/AppLayout';
 
 const BrainBattlesApp = () => {
@@ -48,6 +49,7 @@ const BrainBattlesApp = () => {
           <Route path="/battle" element={<Battle />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/feedback" element={<Feedback />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

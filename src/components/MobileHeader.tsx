@@ -9,6 +9,7 @@ import {
   Trophy,
   User,
   LogOut,
+  MessageSquare
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Practice", path: "/practice", icon: BookOpen },
   { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
   { label: "Profile", path: "/profile", icon: User },
+  { label: "Feedback", path: "/feedback", icon: MessageSquare },
 ];
 
 export default function MobileHeader() {

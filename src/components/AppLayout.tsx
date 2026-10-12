@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Brain, LayoutDashboard, Swords, BookOpen, Trophy, User, LogOut } from "lucide-react";
+import { Brain, LayoutDashboard, Swords, BookOpen, Trophy, User, LogOut, MessageSquare } from "lucide-react";
 import { supabase } from "../api/supabaseClient";
 import { Button } from "../components/ui/button";
 import MobileHeader from "./MobileHeader";
@@ -10,6 +10,7 @@ const navItems = [
   { label: "Practice", path: "/practice", icon: BookOpen },
   { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
   { label: "Profile", path: "/profile", icon: User },
+  { label: "Feedback", path: "/feedback", icon: MessageSquare },
 ];
 
 export default function AppLayout() {
