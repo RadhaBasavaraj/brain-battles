@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
-import { Swords, BookOpen, Trophy, User, ArrowRight, Flame, Target, Award } from "lucide-react";
+import { Swords, BookOpen, Trophy, User, ArrowRight, Flame, Target, Award, MessageCircle} from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import ErrorMessage from "./ErrorMessage";
 import { useAuth } from '../lib/AuthContext';
@@ -33,9 +33,17 @@ const cards = [
     gradient: "from-emerald-500 to-teal-600",
     iconBg: "bg-emerald-100 text-emerald-600",
   },
+    {
+  title: "Discussions",
+  desc: "Ask questions and share knowledge with other students.",
+  icon: MessageCircle,
+  path: "/discussions",
+  gradient: "from-pink-500 to-rose-600",
+  iconBg: "bg-pink-100 text-pink-600",
+  },
   {
     title: "Leaderboard",
-    desc: "See where you stand among the top performers.",
+    desc: "Track battle rankings and discussion contributions.",
     icon: Trophy,
     path: "/leaderboard",
     gradient: "from-amber-500 to-orange-600",

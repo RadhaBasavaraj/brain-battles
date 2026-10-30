@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { supabase } from "../api/supabaseClient";
 import { Button } from "../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { BookOpen, ArrowRight, RotateCcw, CheckCircle2, Lightbulb } from "lucide-react";
+import { BookOpen, ArrowRight, RotateCcw, 
+  CheckCircle2, Lightbulb,  MessageCircle, X,} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import QuestionCard from "../components/quiz/QuestionCard";
 import { useToast } from "../components/ui/use-toast";
 import type {Question} from "../types/QuestionCardProps";
 import type {Subject} from "../types/Subject";
 import type {Unit} from "../types/Unit";
-
+import { useAuth } from '../lib/AuthContext';
 
 export default function Practice() {
   const [phase, setPhase] = useState("setup"); // setup | practicing
@@ -25,7 +26,12 @@ export default function Practice() {
   const [loading, setLoading] = useState(false);
   const [practiceStats, setPracticeStats] = useState({ attempted: 0, correct: 0 });
   const { toast } = useToast();
-
+ 
+  // Ask Question feature
+const [showQuestionComposer, setShowQuestionComposer] = useState(false);
+const [questionContent, setQuestionContent] = useState("");
+const [postingQuestion, setPostingQuestion] = useState(false);
+ const { user } = useAuth();
 
   useEffect(() => {
   const fetchSubjects = async () => {
@@ -165,6 +171,70 @@ useEffect(() => {
     setPracticeStats({ attempted: 0, correct: 0 });
   };
 
+  const handlePostQuestion = async () => {
+  const content = questionContent.trim();
+  const currentQuestion = questions[currentIndex];
+
+  if (!content) {
+    toast({
+      title: "Question required",
+      description: "Please enter your question.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!user?.id) {
+    toast({
+      title: "Login required",
+      description: "Please log in to post a question.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!currentQuestion?.id) {
+    toast({
+      title: "No question selected",
+      description: "Please select a practice question first.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setPostingQuestion(true);
+
+  try {
+    const { error } = await supabase.from("discussions").insert({
+      unit_question_id: currentQuestion.id,
+      user_id: user.id,
+      content,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    setQuestionContent("");
+    setShowQuestionComposer(false);
+
+    toast({
+      title: "Question posted!",
+      description: "Your question has been posted successfully.",
+    });
+  } catch (error) {
+    console.error("Error posting discussion:", error);
+
+    toast({
+      title: "Unable to post question",
+      description: "Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setPostingQuestion(false);
+  }
+};
+
   // Setup Screen
   if (phase === "setup") {
     return (
@@ -249,6 +319,7 @@ useEffect(() => {
 
   // Practicing
   const currentQ = questions[currentIndex];
+  //const currentQuestionId = currentQ?.id;
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -284,27 +355,106 @@ useEffect(() => {
         />
       </AnimatePresence>
 
-      <div className="flex justify-end mt-6 gap-3">
-        {!showResult ? (
-          <Button
-            onClick={handleCheck}
-            disabled={!selectedAnswer}
-            className="gap-2 h-11 px-6 bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
-          >
-            <CheckCircle2 className="w-4 h-4" /> Check Answer
-          </Button>
-        ) : (
-          <Button onClick={handleNext} 
-        //  className="gap-2 h-11 px-6 bg-emerald-600 hover:bg-emerald-700">
-               className="gap-2 h-11 px-6 bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto">
-            {currentIndex < questions.length - 1 ? (
-              <>Next Question <ArrowRight className="w-4 h-4" /></>
-            ) : (
-              <>Finish Practice <CheckCircle2 className="w-4 h-4" /></>
-            )}
-          </Button>
-        )}
-      </div>
+      <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:items-center sm:justify-between">
+  {showResult && (
+    <div className="w-full sm:w-auto">
+      {!showQuestionComposer && (
+        <Button
+          variant="outline"
+          className="gap-2 h-11 px-6 w-full sm:w-auto bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white"
+          onClick={() => {
+            //setPostStatus(null);
+            setShowQuestionComposer(true);
+          }}
+        >
+          <MessageCircle className="w-4 h-4" />
+          Clear My Doubt
+        </Button>
+      )}
     </div>
-  );
+  )}
+
+  <div className="flex justify-end">
+    {!showResult ? (
+      <Button
+        onClick={handleCheck}
+        disabled={!selectedAnswer}
+        className="gap-2 h-11 px-6 bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+      >
+        <CheckCircle2 className="w-4 h-4" /> Check Answer
+      </Button>
+    ) : (
+      <Button
+        onClick={handleNext}
+        className="gap-2 h-11 px-6 bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
+      >
+        {currentIndex < questions.length - 1 ? (
+          <>Next Question <ArrowRight className="w-4 h-4" /></>
+        ) : (
+          <>Finish Practice <CheckCircle2 className="w-4 h-4" /></>
+        )}
+      </Button>
+    )}
+  </div>
+</div>
+
+
+     {/* Question Composer */}
+{showResult && showQuestionComposer && (
+  <div className="mt-4 rounded-xl border border-border bg-card p-4 sm:p-5 space-y-3">
+    <div className="flex items-center justify-between">
+      <h3 className="font-semibold">Clear My Doubt</h3>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setShowQuestionComposer(false);
+          setQuestionContent("");
+         // setPostStatus(null);
+        }}
+        aria-label="Close question composer"
+      >
+        <X className="w-4 h-4" />
+      </Button>
+    </div>
+
+    <p className="text-sm text-muted-foreground">
+      Share your doubt about this practice question.
+    </p>
+
+    <textarea
+      value={questionContent}
+      onChange={(event) => {
+        setQuestionContent(event.target.value);
+       // setPostStatus(null);
+      }}
+      placeholder="What would you like to understand?"
+      rows={4}
+      maxLength={5000}
+      disabled={postingQuestion}
+      className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+    />
+
+    <div className="flex justify-end">
+      <Button
+        onClick={handlePostQuestion}
+        disabled={postingQuestion || !questionContent.trim()}
+        className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+      >
+        {postingQuestion ? (
+          "Posting..."
+        ) : (
+          <>
+            <MessageCircle className="w-4 h-4" />
+            Post Question
+          </>
+        )}
+      </Button>
+    </div>
+
+  </div>
+)}
+  </div>);
 }

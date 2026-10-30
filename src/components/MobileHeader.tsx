@@ -9,6 +9,7 @@ import {
   Trophy,
   User,
   LogOut,
+  MessageCircle
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Battle", path: "/battle", icon: Swords },
   { label: "Practice", path: "/practice", icon: BookOpen },
+     { label: "Discussions", path: "/discussions", icon: MessageCircle },
   { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
   { label: "Profile", path: "/profile", icon: User },
 ];
