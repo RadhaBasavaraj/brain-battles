@@ -9,7 +9,7 @@ import {
   Trophy,
   User,
   LogOut,
-  MessageSquare,
+  MessageSquareText,
   MessageCircle
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -23,7 +23,7 @@ const navItems = [
      { label: "Discussions", path: "/discussions", icon: MessageCircle },
   { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
   { label: "Profile", path: "/profile", icon: User },
-  { label: "Feedback", path: "/feedback", icon: MessageSquare },
+  { label: "Feedback", path: "/feedback", icon: MessageSquareText },
 ];
 
 export default function MobileHeader() {

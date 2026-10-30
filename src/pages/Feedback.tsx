@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { supabase } from "../api/supabaseClient";
 
@@ -53,7 +53,7 @@ export default function Feedback() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-          <MessageSquare className="h-6 w-6 text-primary" />
+          <MessageSquareText className="h-6 w-6 text-primary" />
         </div>
 
         <div>
