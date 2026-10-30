@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback  } from "react";
 import { supabase } from "../api/supabaseClient";
-import { Trophy, Medal, Crown, User } from "lucide-react";
+import { Trophy, Medal, Crown, User, MessageCircle  } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import type { Profile } from "../types/Profile";
 import MobileLeaderboard from "../components/MobileLeaderboard";
@@ -16,10 +16,25 @@ const fadeUp: Variants = {
   }),
 };
 
+type DiscussionChampion = {
+  user_id: string;
+  display_name: string | null;
+  reply_count: number;
+};
+
 export default function Leaderboard() {
   const [leaders, setLeaders] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [leaderBoardError, setleaderBoardError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+  "battles" | "discussions"
+>("battles");
+
+const [champions, setChampions] = useState<
+  DiscussionChampion[]
+>([]);
+const [championsLoading, setChampionsLoading] = useState(false);
+const [championsError, setChampionsError] = useState<string | null>(null);
   const { user } = useAuth(); 
 
   useEffect(() => {
@@ -48,6 +63,41 @@ export default function Leaderboard() {
     };
     load();
   }, []);
+
+  
+
+ const loadDiscussionChampions = useCallback(async () => {
+  setChampionsLoading(true);
+  setChampionsError(null);
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_discussion_champions"
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    setChampions(data ?? []);
+  } catch (e) {
+    if (e instanceof Error) {
+      setChampionsError(e.message);
+    } else {
+      setChampionsError(
+        "Discussion Champions could not be fetched"
+      );
+    }
+  } finally {
+    setChampionsLoading(false);
+  }
+}, []);
+
+useEffect(() => {
+  if (activeTab === "discussions") {
+    loadDiscussionChampions();
+  }
+}, [activeTab, loadDiscussionChampions]);
 
   if (loading) {
     return (
@@ -90,13 +140,51 @@ export default function Leaderboard() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold">Leaderboard</h1>
-            <p className="text-muted-foreground text-sm">Top performers ranked by total score</p>
+            <p className="text-muted-foreground text-sm">Explore battle performance and community contributions</p>
           </div>
         </div>
       </motion.div>
 
-      {leaders.length === 0 ? (
-        <motion.div
+      <div
+  className="flex gap-2 mb-6 border-b border-border"
+  role="tablist"
+  aria-label="Leaderboard categories"
+>
+  <button
+    type="button"
+    role="tab"
+    aria-selected={activeTab === "battles"}
+    onClick={() => setActiveTab("battles")}
+    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+      activeTab === "battles"
+        ? "border-primary text-primary"
+        : "border-transparent text-muted-foreground hover:text-foreground"
+    }`}
+  >
+    <Trophy className="w-4 h-4 inline mr-2" />
+    Battle Leaderboard
+  </button>
+
+  <button
+    type="button"
+    role="tab"
+    aria-selected={activeTab === "discussions"}
+    onClick={() => setActiveTab("discussions")}
+    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+      activeTab === "discussions"
+        ? "border-primary text-primary"
+        : "border-transparent text-muted-foreground hover:text-foreground"
+    }`}
+  >
+    <MessageCircle className="w-4 h-4 inline mr-2" />
+    Discussion Champions
+  </button>
+</div>
+
+{activeTab === "battles" ? (
+  leaders.length === 0 ? (
+    // Keep your existing "No scores yet" JSX here
+     <motion.div
           initial="hidden"
           animate="visible"
           custom={1}
@@ -107,8 +195,9 @@ export default function Leaderboard() {
           <h3 className="font-display text-lg font-semibold mb-2">No scores yet</h3>
           <p className="text-muted-foreground text-sm">Complete a battle to appear on the leaderboard!</p>
         </motion.div>
-      ) : (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+  ) : (
+    // Keep your existing battle leaderboard table JSX here
+     <div className="bg-card border border-border rounded-2xl overflow-hidden">
           {/* Table header */}
           <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-muted/30 text-xs font-medium text-muted-foreground uppercase tracking-wider">
             <div className="col-span-1">Rank</div>
@@ -165,18 +254,105 @@ export default function Leaderboard() {
             );
           })}
         </div>
-      )}
+  )
+) : (
+  // Discussion Champions content goes here
+  <div className="bg-card border border-border rounded-2xl overflow-hidden">
+  {championsLoading ? (
+    <div className="flex items-center justify-center p-12">
+      <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
+    </div>
+  ) : championsError ? (
+    <div className="p-6">
+      <ErrorMessage message={championsError} />
+    </div>
+  ) : champions.length === 0 ? (
+    <div className="p-12 text-center">
+      <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+      <h3 className="font-display text-lg font-semibold mb-2">
+        No discussion contributions yet
+      </h3>
+      <p className="text-muted-foreground text-sm">
+        Reply to another student's question to become a Discussion Champion!
+      </p>
+    </div>
+  ) : (
+    <div>
+      <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-muted/30 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <div className="col-span-1">Rank</div>
+        <div className="col-span-8">Student</div>
+        <div className="col-span-3 text-right">Helpful Replies</div>
+      </div>
+
+      {champions.map((champion, i) => {
+        const isCurrentUser = champion.user_id === user?.id;
+
+        return (
+          <motion.div
+            key={champion.user_id}
+            initial="hidden"
+            animate="visible"
+            custom={i + 1}
+            variants={fadeUp}
+            className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-border/50 last:border-0 transition-colors ${
+              isCurrentUser ? "bg-primary/5" : "hover:bg-muted/30"
+            }`}
+          >
+            <div className="col-span-1 flex items-center">
+              {getRankIcon(i) || (
+                <span className="text-sm font-medium text-muted-foreground w-5 text-center">
+                  {i + 1}
+                </span>
+              )}
+            </div>
+
+            <div className="col-span-8 flex items-center gap-3">
+              <div
+                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                  i < 3 ? getRankBg(i) : "bg-muted"
+                }`}
+              >
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
+
+              <span className="text-sm font-semibold">
+                {champion.display_name || "Student"}
+                {isCurrentUser && (
+                  <span className="ml-2 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    You
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="col-span-3 text-right">
+              <span className="font-display font-bold text-lg">
+                {champion.reply_count}
+              </span>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  )}
+</div>
+)}
+
+   
     </div>
 
    {/* Mobile */}
     <div className="sm:hidden">
-      <MobileLeaderboard
-        leaders={leaders}
-        currentUserId={user? user.id : ""} 
-        getRankIcon={getRankIcon}
-        getRankBg={getRankBg}
-        fadeUp={fadeUp}
-      />
+     <MobileLeaderboard
+  leaders={leaders}
+  champions={champions}
+  activeTab={activeTab}
+  currentUserId={user ? user.id : ""}
+  getRankIcon={getRankIcon}
+  getRankBg={getRankBg}
+  fadeUp={fadeUp}
+   onTabChange={setActiveTab}
+/>
     </div>
     </>
   );

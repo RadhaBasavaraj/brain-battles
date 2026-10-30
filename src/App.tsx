@@ -21,6 +21,8 @@ import Practice from './pages/Practice';
 import Leaderboard from './pages/Leaderboard';
 import Feedback from './pages/Feedback';
 import AppLayout from './components/AppLayout';
+import Discussions from './pages/Discussions';
+import DiscussionDetail from "./pages/DiscussionDetail";
 
 const BrainBattlesApp = () => {
   const { isLoadingAuth } = useAuth();
@@ -50,6 +52,8 @@ const BrainBattlesApp = () => {
           <Route path="/practice" element={<Practice />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/discussions" element={<Discussions />} />
+          <Route path="/discussions/:id" element={<DiscussionDetail />}/>
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
