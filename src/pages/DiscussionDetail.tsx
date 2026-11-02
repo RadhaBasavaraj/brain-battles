@@ -4,7 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../components/ui/use-toast";
-import MathTest from "../lib/MathText";
+import MathText from "../lib/MathText";
+import RichTextMathEditor from "../lib/RichTextMathEditor";
 
 type DiscussionData = {
   id: string;
@@ -402,7 +403,7 @@ export default function DiscussionDetail() {
           </h2>
 
           <div className="space-y-4">
-            <MathTest
+            <MathText
               text={question?.question_text ?? "Question unavailable."}
             />
 
@@ -412,7 +413,7 @@ export default function DiscussionDetail() {
                   key={option}
                   className="min-w-0 rounded-md border border-blue-200 bg-white p-3 dark:border-blue-900 dark:bg-background"
                 >
-                  <MathTest
+                  <MathText
                     text={`${option.toUpperCase()}. ${
                       question?.[`option_${option}`] ?? ""
                     }`}
@@ -435,7 +436,7 @@ export default function DiscussionDetail() {
                 Explanation
               </h3>
               <div className="mt-2 min-w-0 break-words">
-                <MathTest
+                <MathText
                   text={
                     question?.explanation ?? "No explanation available."
                   }
@@ -452,7 +453,7 @@ export default function DiscussionDetail() {
           </h2>
 
           <div className="mt-3 min-w-0 break-words">
-            <MathTest text={discussion.content} />
+            <MathText text={discussion.content} />
           </div>
         </section>
 
@@ -492,7 +493,7 @@ export default function DiscussionDetail() {
                   </div>
 
                   <div className="mt-3 min-w-0 break-words">
-                    <MathTest text={reply.content} />
+                    <MathText text={reply.content} />
                   </div>
                 </article>
               ))}
@@ -508,22 +509,25 @@ export default function DiscussionDetail() {
             className="mt-3 space-y-3"
             onSubmit={handleSubmitReply}
           >
-            <textarea
-              value={replyText}
-              onChange={(event) => {
-                setReplyText(event.target.value);
-                setReplyError("");
-                setReplySuccess("");
-              }}
-              placeholder="Share your explanation or help answer this doubt..."
-              rows={4}
-              maxLength={5000}
-              required
-              disabled={
-                isSubmittingReply || discussion.is_resolved
-              }
-              className="w-full rounded-lg border bg-background p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
-            />
+                    
+          <RichTextMathEditor
+            value={replyText}
+            onChange={(value) => {
+              setReplyText(value);
+              setReplyError("");
+              setReplySuccess("");
+            }}
+            placeholder="Share your explanation or help answer this doubt..."
+            maxLength={5000}
+            disabled={
+              isSubmittingReply || discussion.is_resolved
+            }
+            className="w-full min-h-[100px] rounded-lg border bg-background p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+          />
+
+          <div className="text-right text-xs text-muted-foreground">
+            {replyText.length}/5000
+          </div>       
 
             {replyError && (
               <p className="text-sm text-destructive">
@@ -555,6 +559,8 @@ export default function DiscussionDetail() {
               {isSubmittingReply ? "Submitting..." : "Submit Reply"}
             </button>
           </form>
+
+
         </section>
       </div>
     </div>

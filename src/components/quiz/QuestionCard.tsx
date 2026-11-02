@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { QuestionCardProps } from "../../types/QuestionCardProps";
-import MathTest from "../../lib/MathText";
+import MathText from "../../lib/MathText";
 
 const optionLetters = ["A", "B", "C", "D"];
 const optionKeys = ["option_a", "option_b", "option_c", "option_d"] as const;
@@ -32,7 +32,7 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, showR
       {/*Responsiveness : <h3 className="font-display text-xl font-semibold mb-8 leading-relaxed"> */}
       <h3 className="font-display text-lg font-semibold mb-6 leading-relaxed sm:text-xl sm:mb-8">
         {/* {question.question_text} */}
-          <MathTest text={question.question_text} />
+          <MathText text={question.question_text} />
       </h3>
 
       {question.image_url && (
@@ -86,7 +86,7 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, showR
               {/*Responsiveness:  <span className="text-sm font-medium"> */}
                <span className="text-sm font-medium min-w-0 break-words">
                 {/* {question[key]} */}
-                 <MathTest text={question[key]} />
+                 <MathText text={question[key]} />
               </span>
             </button>
           );
@@ -103,7 +103,7 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, showR
           <p className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">Explanation: </span>
             {/* {question.explanation} */}
-            <MathTest text={question.explanation} />
+            <MathText text={question.explanation} />
           </p>
         </motion.div>
       )}
