@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
-import MathTest from "../lib/MathText";
+import MathText from "../lib/MathText";
 import { useNavigate } from "react-router-dom";
 
 type DiscussionTab = "mine" | "all";
@@ -382,7 +382,7 @@ const filteredDiscussions = discussions.filter((discussion) => {
 
                 <div className="mt-2 min-w-0">
   <div className="line-clamp-3 break-words text-sm whitespace-pre-line leading-6">
-    <MathTest text={discussion.content} />
+    <MathText text={discussion.content} />
   </div>
 </div>
 
@@ -394,7 +394,7 @@ const filteredDiscussions = discussions.filter((discussion) => {
 
     <div className="mt-1 min-w-0">
       <div className="line-clamp-3 break-words text-sm whitespace-pre-line leading-6">
-        <MathTest text={discussion.question_text} />
+        <MathText text={discussion.question_text} />
       </div>
     </div>
   </div>

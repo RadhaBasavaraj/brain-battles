@@ -11,6 +11,7 @@ import type {Question} from "../types/QuestionCardProps";
 import type {Subject} from "../types/Subject";
 import type {Unit} from "../types/Unit";
 import { useAuth } from '../lib/AuthContext';
+import RichTextMathEditor from "../lib/RichTextMathEditor";
 
 export default function Practice() {
   const [phase, setPhase] = useState("setup"); // setup | practicing
@@ -412,7 +413,6 @@ useEffect(() => {
         onClick={() => {
           setShowQuestionComposer(false);
           setQuestionContent("");
-         // setPostStatus(null);
         }}
         aria-label="Close question composer"
       >
@@ -424,18 +424,17 @@ useEffect(() => {
       Share your doubt about this practice question.
     </p>
 
-    <textarea
-      value={questionContent}
-      onChange={(event) => {
-        setQuestionContent(event.target.value);
-       // setPostStatus(null);
-      }}
-      placeholder="What would you like to understand?"
-      rows={4}
-      maxLength={5000}
-      disabled={postingQuestion}
-      className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-    />
+    <RichTextMathEditor
+  value={questionContent}
+  onChange={setQuestionContent}
+  placeholder="What would you like to understand?"
+  maxLength={5000}
+  disabled={postingQuestion}
+  className="w-full min-h-[100px] resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+/>
+<div className="mt-1 text-right text-xs text-muted-foreground">
+  {questionContent.length}/5000
+</div>
 
     <div className="flex justify-end">
       <Button

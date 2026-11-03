@@ -5,7 +5,7 @@ interface MathTextProps {
   text: string;
 }
 
-export default function MathTest({ text }: MathTextProps) {
+export default function MathText({ text }: MathTextProps) {
   const containerRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -90,8 +90,8 @@ export default function MathTest({ text }: MathTextProps) {
 
       const range = selection.getRangeAt(0);
 
-      // Only handle selections entirely inside this MathTest instance, so
-      // separate MathTest components do not compete to write to the clipboard.
+      // Only handle selections entirely inside this MathText instance, so
+      // separate MathText components do not compete to write to the clipboard.
       if (
         !container.contains(range.startContainer) ||
         !container.contains(range.endContainer)
