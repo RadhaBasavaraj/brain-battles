@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import  {Button}  from "../components/ui/button";
-import { Brain, Zap, Trophy, BookOpen, Users, ArrowRight, Swords } from "lucide-react";
+import { Brain, Zap, Trophy, BookOpen, Users, ArrowRight, Swords, Play  } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
 const fadeUp: Variants = {
@@ -16,14 +16,16 @@ const features = [
   {
     icon: Swords,
     title: "Battle Mode",
-    desc: "Race against the clock in intense timed quizzes. Every second counts!",
+    desc: "Race against time in exciting quiz battles!",
     color: "bg-primary/10 text-primary",
+    route: "/battle",
   },
   {
     icon: BookOpen,
     title: "Practice Mode",
     desc: "Learn at your own pace with unlimited practice questions.",
     color: "bg-accent/10 text-accent-foreground",
+    route: "/practice",
   },
   {
     icon: Trophy,
@@ -73,7 +75,9 @@ export default function Landing() {
       {/* Hero */}
       {/*responsiveness : <section className="pt-40 pb-24 px-8"> */}
       <section className="pt-28 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-16">
+
+          {/* Hero Content */}
           <div className="max-w-3xl">
             <motion.div
               initial="hidden"
@@ -85,51 +89,75 @@ export default function Landing() {
               <Zap className="w-3.5 h-3.5" />
               Learn. Compete. Conquer.
             </motion.div>
+
             <motion.h1
               initial="hidden"
               animate="visible"
               custom={1}
               variants={fadeUp}
-              //Responsiveness :  className="font-display text-6xl font-extrabold leading-tight tracking-tight mb-6"
               className="font-display text-4xl sm:text-6xl font-extrabold leading-tight tracking-tight mb-6"
             >
               Sharpen your mind
-              <br className="hidden sm:block"/>
+              <br className="hidden sm:block" />
               through <span className="text-primary">epic battles</span>
             </motion.h1>
+
             <motion.p
               initial="hidden"
               animate="visible"
               custom={2}
               variants={fadeUp}
-              //Responsiveness :  className="text-lg text-muted-foreground leading-relaxed max-w-xl mb-10"
               className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mb-8 sm:mb-10"
             >
               Challenge yourself with quizzes across Math, Physics, Chemistry and more.
               Practice at your pace or battle under pressure — the choice is yours.
             </motion.p>
+
             <motion.div
               initial="hidden"
               animate="visible"
               custom={3}
               variants={fadeUp}
-              //Responsiveness : className="flex items-center gap-4"
               className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4"
             >
               <Link to="/register">
-                {/*Responsiveness : <Button size="lg" className="h-12 px-8 text-base font-semibold gap-2"> */}
                 <Button size="lg" className="h-12 w-full sm:w-auto px-8 text-base font-semibold gap-2">
                   Start Learning <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+
               <Link to="/login">
-                {/*Responsiveness :  <Button variant="outline" size="lg" className="h-12 px-8 text-base font-semibold"> */}
                 <Button variant="outline" size="lg" className="h-12 w-full sm:w-auto px-8 text-base font-semibold">
                   Sign In
                 </Button>
               </Link>
             </motion.div>
           </div>
+
+          {/* Product Demo Video Placeholder */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            custom={4}
+            variants={fadeUp}
+            className="w-full"
+          >
+            <div className="aspect-video w-full rounded-2xl border border-border/60 bg-muted/60 shadow-lg flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <Play className="w-8 h-8 sm:w-10 sm:h-10 text-primary ml-1" />
+              </div>
+
+              <div className="text-center px-4">
+                <p className="font-display text-lg sm:text-xl font-semibold">
+                  BrainBattles Product Demo
+                </p>
+                <p className="text-muted-foreground text-sm mt-2">
+                  Video coming soon
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
         </div>
       </section>
 
@@ -154,24 +182,62 @@ export default function Landing() {
           </motion.div>
           {/* Responsiveness : <div className="grid grid-cols-4 gap-6"> */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                custom={i + 1}
-                variants={fadeUp}
-                // Responsiveness : className="bg-card rounded-2xl p-8 border border-border/60 hover:border-primary/30 transition-colors duration-300"
-                 className="bg-card rounded-2xl p-6 sm:p-8 border border-border/60 hover:border-primary/30 transition-colors duration-300"
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${f.color}`}>
-                  <f.icon className="w-6 h-6" />
+           {features.map((f, i) => {
+              const cardContent = (
+                <div
+                  className={`bg-card rounded-2xl p-6 sm:p-8 border border-border/60 h-full flex flex-col transition-all duration-300 ${
+                    f.route
+                      ? "hover:border-primary/50 hover:shadow-lg cursor-pointer group"
+                      : ""
+                  }`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${f.color}`}
+                  >
+                    <f.icon className="w-6 h-6" />
+                  </div>
+
+                  <h3 className="font-display text-lg font-semibold mb-2">
+                    {f.title}
+                  </h3>
+
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {f.desc}
+                  </p>
+
+                  {f.route && (
+                    <div className="flex items-center gap-2 mt-5 text-sm font-semibold text-primary">
+                      Try Now
+                      <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                    </div>
+                  )}
                 </div>
-                <h3 className="font-display text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
+              );
+
+              return (
+                <motion.div
+                  key={f.title}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  custom={i + 1}
+                  variants={fadeUp}
+                  className="h-full"
+                >
+                  {f.route ? (
+                    <Link
+                      to={f.route}
+                      className="block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label={`${f.title} - Try Now`}
+                    >
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    cardContent
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>

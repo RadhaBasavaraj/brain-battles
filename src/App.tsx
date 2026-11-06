@@ -44,12 +44,18 @@ const BrainBattlesApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Routes accessible to both guests and authenticated users */}
+      <Route element={<AppLayout />}>
+        <Route path="/battle" element={<Battle />} />
+        <Route path="/practice" element={<Practice />} />
+      </Route>
+
+        {/* Routes accessible only to authenticated users */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}> 
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/battle" element={<Battle />} />
-          <Route path="/practice" element={<Practice />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/discussions" element={<Discussions />} />

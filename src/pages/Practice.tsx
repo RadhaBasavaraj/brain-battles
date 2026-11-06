@@ -13,6 +13,19 @@ import type {Unit} from "../types/Unit";
 import { useAuth } from '../lib/AuthContext';
 import RichTextMathEditor from "../lib/RichTextMathEditor";
 
+
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+};
+
+
 export default function Practice() {
   const [phase, setPhase] = useState("setup"); // setup | practicing
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -32,7 +45,7 @@ export default function Practice() {
 const [showQuestionComposer, setShowQuestionComposer] = useState(false);
 const [questionContent, setQuestionContent] = useState("");
 const [postingQuestion, setPostingQuestion] = useState(false);
- const { user } = useAuth();
+ const { user , isAuthenticated} = useAuth();
 
   useEffect(() => {
   const fetchSubjects = async () => {
@@ -59,7 +72,7 @@ useEffect(() => {
       return;
     }
 
-      setLoadingUnits(true);
+    setLoadingUnits(true);
 
     const { data, error } = await supabase
       .from("units")
@@ -73,12 +86,31 @@ useEffect(() => {
       return;
     }
 
-    setUnits(data);
+    let availableUnits = data ?? [];
+
+    // Guests can access only Unit 1 and Unit 2.
+    if (!isAuthenticated) {
+      availableUnits = availableUnits
+        .filter((unit) => {
+          const match = unit.name.match(/^\s*(\d+)\s*\./);
+          const unitNumber = match ? Number(match[1]) : null;
+
+          return unitNumber === 1 || unitNumber === 2;
+        })
+        .sort((a, b) => {
+          const numberA = Number(a.name.match(/^\s*(\d+)\s*\./)?.[1]);
+          const numberB = Number(b.name.match(/^\s*(\d+)\s*\./)?.[1]);
+
+          return numberA - numberB;
+        });
+    }
+
+    setUnits(availableUnits);
     setLoadingUnits(false);
   };
 
   fetchUnits();
-}, [subject]);
+}, [subject, isAuthenticated]);
 
  const handleSubjectChange = (subjectId: string) => {
      const selectedSubject = subjects.find(
@@ -97,46 +129,63 @@ useEffect(() => {
   setUnit(selectedUnit ?? null);
 };
 
-  const loadQuestions = async () => {
-    setLoading(true);
-    try {
-    if (!unit) {
-        return;
-     }
 
-   let query = supabase
-  .from("unit_questions")
-  .select("*")
-  .eq("unit_id", unit.id);
+const loadQuestions = async () => {
+  if (!unit) return;
 
-    const { data: allQuestions, error } = await query;
+  setLoading(true);
 
+  try {
+    const { data: allQuestions, error } = await supabase
+      .from("unit_questions")
+      .select("*")
+      .eq("unit_id", unit.id);
 
     if (error) {
       throw error;
     }
 
-     
-      if (allQuestions.length === 0) {
-        toast({ title: "No questions found", description: "Try a different subject/unit.", variant: "destructive" });  
-        setLoading(false);
-        return;
-      }
-
-       const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-      setQuestions(shuffled);
-      setCurrentIndex(0);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      setPracticeStats({ attempted: 0, correct: 0 });
-      setPhase("practicing");
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to load questions.", variant: "destructive" });
+    if (!allQuestions || allQuestions.length === 0) {
+      toast({
+        title: "No questions found",
+        description: "Try a different subject/unit.",
+        variant: "destructive",
+      });
+      return;
     }
-    setLoading(false);
-  };
 
-  const handleSelect = (letter: string) => {
+    // Shuffle all questions fetched for this unit.
+    const shuffled = shuffleArray(allQuestions);
+
+    // Authenticated users get all questions.
+    // Guests get only five randomly selected questions.
+    const selectedQuestions = isAuthenticated
+      ? shuffled
+      : shuffled.slice(0, 5);
+
+    setQuestions(selectedQuestions);
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setPracticeStats({ attempted: 0, correct: 0 });
+    setShowQuestionComposer(false);
+    setQuestionContent("");
+    setPhase("practicing");
+  } catch (e) {
+    console.error("Error loading questions:", e);
+
+    toast({
+      title: "Error",
+      description: "Failed to load questions.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+   
+ const handleSelect = (letter: string) => {
     if (showResult) return;
     setSelectedAnswer(letter);
   };
@@ -160,19 +209,30 @@ useEffect(() => {
       setPhase("setup");
       setSubject(null);
       setUnit(null);
+
+       setShowQuestionComposer(false);
+  setQuestionContent("");
     }
   };
 
   const handleShuffle = () => {
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    setQuestions(shuffled);
-    setCurrentIndex(0);
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setPracticeStats({ attempted: 0, correct: 0 });
-  };
+  const shuffled = shuffleArray(questions);
 
-  const handlePostQuestion = async () => {
+  setQuestions(shuffled);
+  setCurrentIndex(0);
+  setSelectedAnswer(null);
+  setShowResult(false);
+  setPracticeStats({ attempted: 0, correct: 0 });
+  setShowQuestionComposer(false);
+  setQuestionContent("");
+};
+
+    const handlePostQuestion = async () => {
+
+     if (!isAuthenticated || !user?.id) {
+    return;
+  }
+
   const content = questionContent.trim();
   const currentQuestion = questions[currentIndex];
 
@@ -361,12 +421,13 @@ useEffect(() => {
     <div className="w-full sm:w-auto">
       {!showQuestionComposer && (
         <Button
-          variant="outline"
-          className="gap-2 h-11 px-6 w-full sm:w-auto bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white"
-          onClick={() => {
-            //setPostStatus(null);
-            setShowQuestionComposer(true);
-          }}
+         variant="outline"
+        className="gap-2 h-11 px-6 w-full sm:w-auto bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!isAuthenticated}
+        onClick={() => {
+          if (!isAuthenticated) return;
+          setShowQuestionComposer(true);
+        }}
         >
           <MessageCircle className="w-4 h-4" />
           Clear My Doubt
@@ -401,7 +462,7 @@ useEffect(() => {
 
 
      {/* Question Composer */}
-{showResult && showQuestionComposer && (
+{isAuthenticated  && showResult && showQuestionComposer && (
   <div className="mt-4 rounded-xl border border-border bg-card p-4 sm:p-5 space-y-3">
     <div className="flex items-center justify-between">
       <h3 className="font-semibold">Clear My Doubt</h3>
