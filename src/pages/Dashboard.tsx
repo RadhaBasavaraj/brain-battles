@@ -115,8 +115,11 @@ export default function Dashboard() {
       <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
         {/*Responsiveness :  <h1 className="font-display text-3xl font-bold mb-1"> */}
         <h1 className="font-display text-2xl font-bold mb-1 sm:text-3xl">
-          Welcome back{user?.user_metadata.full_name ? `, ${user.user_metadata.full_name}` : ""}!
+          Welcome back!
         </h1>
+          {/*<h1 className="font-display text-2xl font-bold mb-1 sm:text-3xl">
+          Welcome back{user?.user_metadata.full_name ? `, ${user.user_metadata.full_name}` : ""}!
+        </h1> */}
         <p className="text-muted-foreground mb-8">Ready to challenge your brain today?</p>
       </motion.div>
 

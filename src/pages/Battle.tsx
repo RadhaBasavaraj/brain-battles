@@ -32,7 +32,7 @@ export default function Battle() {
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<number | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated} = useAuth();
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -90,34 +90,53 @@ export default function Battle() {
   }, []);
   
   
-  useEffect(() => {
-    const fetchUnits = async () => {
-      if (!subject) {
-        setUnits([]);
-        return;
-      }
-  
-        setLoadingUnits(true);
-  
-      const { data, error } = await supabase
-        .from("units")
-        .select("id, name, subject_id")
-        .eq("subject_id", subject.id);
-  
-      if (error) {
-        console.error("Error fetching units:", error);
-        setUnits([]);
-        setLoadingUnits(false);
-        return;
-      }
-  
-      setUnits(data);
+useEffect(() => {
+  const fetchUnits = async () => {
+    if (!subject) {
+      setUnits([]);
+      return;
+    }
+
+    setLoadingUnits(true);
+
+    const { data, error } = await supabase
+      .from("units")
+      .select("id, name, subject_id")
+      .eq("subject_id", subject.id);
+
+    if (error) {
+      console.error("Error fetching units:", error);
+      setUnits([]);
       setLoadingUnits(false);
-      console.log("Units fetched are : ", data);
-    };
-  
-    fetchUnits();
-  }, [subject]);
+      return;
+    }
+
+    let availableUnits = data ?? [];
+
+    // Guests can access only Unit 1 and Unit 2.
+    if (!isAuthenticated) {
+      availableUnits = availableUnits
+        .filter((unit) => {
+          const match = unit.name.match(/^\s*(\d+)\s*\./);
+          const unitNumber = match ? Number(match[1]) : null;
+
+          return unitNumber === 1 || unitNumber === 2;
+        })
+        .sort((a, b) => {
+          const numberA = Number(a.name.match(/^\s*(\d+)\s*\./)?.[1]);
+          const numberB = Number(b.name.match(/^\s*(\d+)\s*\./)?.[1]);
+
+          return numberA - numberB;
+        });
+    }
+
+    setUnits(availableUnits);
+    setLoadingUnits(false);
+  };
+
+  fetchUnits();
+}, [subject, isAuthenticated]);
+
   
    const handleSubjectChange = (subjectId: string) => {
        const selectedSubject = subjects.find(
@@ -136,49 +155,68 @@ export default function Battle() {
     setUnit(selectedUnit ?? null);
   };
 
-  const startBattle = async () => {
-    setLoading(true);
-    try {
+  
+const startBattle = async () => {
+  if (!unit) return;
 
-      if (!unit) {
-          return;
-       }
-  
-     let query = supabase
-    .from("unit_questions")
-    .select("*")
-    .eq("unit_id", unit.id);
-  
-      const { data: allQuestions, error } = await query;
-  
-      console.log("Data from supbase : ", allQuestions);
-  
-      if (error) {
-        throw error;
-      }
-      
+  setLoading(true);
 
-      if (allQuestions.length === 0) {
-        toast({ title: "No questions found", description: "Try a different category.", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-      
-      const shuffled = allQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
-      setQuestions(shuffled);
-      setCurrentIndex(0);
-      setScore(0);
-      setCorrectCount(0);
-      setTotalTimeTaken(0);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      setPhase("playing");
-      startTimer();
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to load questions.", variant: "destructive" });
+  try {
+    const { data: allQuestions, error } = await supabase
+      .from("unit_questions")
+      .select("*")
+      .eq("unit_id", unit.id);
+
+    if (error) {
+      throw error;
     }
+
+    if (!allQuestions || allQuestions.length === 0) {
+      toast({
+        title: "No questions found",
+        description: "Try a different category.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Shuffle all questions using Fisher-Yates.
+    const shuffled = [...allQuestions];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Guests get 5 questions; authenticated users get 10.
+    const selectedQuestions = shuffled.slice(
+      0,
+      isAuthenticated ? 10 : 5
+    );
+
+    setQuestions(selectedQuestions);
+    setCurrentIndex(0);
+    setScore(0);
+    setCorrectCount(0);
+    setTotalTimeTaken(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setTimeLeft(TIME_PER_QUESTION);
+    setPhase("playing");
+
+    startTimer();
+  } catch (e) {
+    console.error("Error starting battle:", e);
+
+    toast({
+      title: "Error",
+      description: "Failed to load questions.",
+      variant: "destructive",
+    });
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   const handleSelect = (letter: string) => {
     if (showResult) return;
@@ -198,76 +236,80 @@ export default function Battle() {
     }
   };
 
-  const handleNext = async () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      startTimer();
-    } else {
-      stopTimer();
-      setPhase("result");
-      setSubject(null);
-      setUnit(null);
-      // Save battle result
-      try {
-       // const me = await base44.auth.me();
-        // const { data, error } = await supabase.auth.getUser();
-        // if (error) {
-        //   throw error;
-        // }
-        // const me = data.user;
-      
-        const finalScore = score;
+  
+const handleNext = async () => {
+  if (currentIndex < questions.length - 1) {
+    setCurrentIndex((prev) => prev + 1);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    startTimer();
+  } else {
+    stopTimer();
+    setPhase("result");
+    setSubject(null);
+setUnit(null);
 
-        const { error: insertError } = await supabase
-                  .from("battle_results")
-                  .insert({
-                    user_id: user?.id,
-                    user_name: user?.user_metadata.full_name || user?.email,
-                    score: finalScore,
-                    total_questions: questions.length,
-                    correct_answers: correctCount,
-                    subject:subject?.name,
-                    time_taken_seconds: totalTimeTaken,
-                  });
-
-                if (insertError) {
-                  throw insertError;
-                }
-        // Update profile
-
-        const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("total_battles, total_score, battles_won")
-                .eq("user_id", user?.id)
-                .single();
-
-              if (profileError) {
-                throw profileError;
-              }
-
-        const { error: updateError } = await supabase
-                .from("profiles")
-                .update({
-                  total_battles: (profile.total_battles || 0) + 1,
-                  total_score: (profile.total_score || 0) + finalScore,
-                  battles_won:
-                    (profile.battles_won || 0) +
-                    (correctCount >= Math.ceil(questions.length * 0.7) ? 1 : 0),
-                })
-                .eq("user_id", user?.id);
-
-              if (updateError) {
-                throw updateError;
-              }
-
-
-      } catch (e) { 
-        toast({ title: "Error", description: "Could not save battle results", variant: "destructive" });
-      }
+    // Guests do not save battle results or update profiles.
+    if (!isAuthenticated || !user?.id) {
+      return;
     }
-  };
+
+    // Save battle result for authenticated users.
+    try {
+      const finalScore = score;
+
+      const { error: insertError } = await supabase
+        .from("battle_results")
+        .insert({
+          user_id: user.id,
+          user_name: user.user_metadata.full_name || user.email,
+          score: finalScore,
+          total_questions: questions.length,
+          correct_answers: correctCount,
+          subject: subject?.name,
+          time_taken_seconds: totalTimeTaken,
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Update profile.
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("total_battles, total_score, battles_won")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          total_battles: (profile.total_battles || 0) + 1,
+          total_score: (profile.total_score || 0) + finalScore,
+          battles_won:
+            (profile.battles_won || 0) +
+            (correctCount >= Math.ceil(questions.length * 0.7) ? 1 : 0),
+        })
+        .eq("user_id", user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+    } catch (e) {
+      console.error("Error saving battle results:", e);
+
+      toast({
+        title: "Error",
+        description: "Could not save battle results",
+        variant: "destructive",
+      });
+    }
+  }
+};
 
   const timerPercent = (timeLeft / TIME_PER_QUESTION) * 100;
   const timerColor = timeLeft > 15 ? "text-emerald-500" : timeLeft > 5 ? "text-amber-500" : "text-red-500";
@@ -286,9 +328,10 @@ export default function Battle() {
              <h1 className="font-display text-2xl font-bold mb-2 sm:text-3xl">
             Battle Mode
           </h1>
-          <p className="text-muted-foreground">
-            Answer 10 questions against the clock. Faster answers earn bonus points!
-          </p>
+        <p className="text-muted-foreground">
+           Answer {isAuthenticated ? 10 : 5} questions against the clock.
+           Faster answers earn bonus points!
+       </p>
         </div>
 
         {/* Responsiveness : <div className="bg-card border border-border rounded-2xl p-8"> */}
@@ -331,7 +374,7 @@ export default function Battle() {
           <div className="bg-muted/50 rounded-xl p-4 mb-6 space-y-2 sm:p-5">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Questions</span>
-              <span className="font-medium">10</span>
+              <span className="font-medium">{isAuthenticated ? 10 : 5}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Time per question</span>
