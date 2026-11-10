@@ -134,7 +134,7 @@ export default function Landing() {
             </motion.div>
           </div>
 
-          {/* Product Demo Video Placeholder */}
+          {/* Product Demo Video */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -142,22 +142,16 @@ export default function Landing() {
             variants={fadeUp}
             className="w-full"
           >
-            <div className="aspect-video w-full rounded-2xl border border-border/60 bg-muted/60 shadow-lg flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Play className="w-8 h-8 sm:w-10 sm:h-10 text-primary ml-1" />
-              </div>
-
-              <div className="text-center px-4">
-                <p className="font-display text-lg sm:text-xl font-semibold">
-                  BrainBattles Product Demo
-                </p>
-                <p className="text-muted-foreground text-sm mt-2">
-                  Video coming soon
-                </p>
-              </div>
+            <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border/60 shadow-lg">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/eYikJX1Wl-g"
+                title="BrainBattles Product Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
           </motion.div>
-
         </div>
       </section>
 
