@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import  {Button}  from "../components/ui/button";
-import { Brain, Zap, Trophy, BookOpen, Users, ArrowRight, Swords, Play  } from "lucide-react";
+import { Brain, Zap, Trophy, BookOpen, Users, ArrowRight, Swords  } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
 const fadeUp: Variants = {
